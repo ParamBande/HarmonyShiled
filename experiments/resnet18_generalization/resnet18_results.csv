@@ -1,0 +1,6 @@
+Experiment,Accuracy,Precision,Recall,F1,ROC-AUC,CM,Test_Human,Test_AI,Train_Size,Checkpoint
+LOGO_audioldm2,0.675,0.6521739130434783,0.75,0.6976744186046512,0.6275,"[[12, 8], [5, 15]]",20,20,400,D:\PROJECTS\harmonyshield\harmonyshield\experiments\resnet18_generalization\checkpoints\LOGO_audioldm2_model.pt
+LOGO_stable_audio_open,0.5,0.5,0.95,0.6551724137931034,0.6074999999999999,"[[1, 19], [1, 19]]",20,20,400,D:\PROJECTS\harmonyshield\harmonyshield\experiments\resnet18_generalization\checkpoints\LOGO_stable_audio_open_model.pt
+LOGO_musicldm,0.725,0.6451612903225806,1.0,0.7843137254901961,0.8475,"[[9, 11], [0, 20]]",20,20,400,D:\PROJECTS\harmonyshield\harmonyshield\experiments\resnet18_generalization\checkpoints\LOGO_musicldm_model.pt
+LOGO_mustango,0.575,0.5405405405405406,1.0,0.7017543859649122,0.665,"[[3, 17], [0, 20]]",20,20,400,D:\PROJECTS\harmonyshield\harmonyshield\experiments\resnet18_generalization\checkpoints\LOGO_mustango_model.pt
+LOGO_MusicGen_medium,0.725,0.6451612903225806,1.0,0.7843137254901961,0.8250000000000001,"[[9, 11], [0, 20]]",20,20,400,D:\PROJECTS\harmonyshield\harmonyshield\experiments\resnet18_generalization\checkpoints\LOGO_MusicGen_medium_model.pt

@@ -1,0 +1,93 @@
+# ==============================================================================
+# HarmonyShield - Git Ignore Configuration
+# ==============================================================================
+
+# ─── Python & Virtual Environments ───────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# ─── Testing & Quality ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# ─── Node & Frontend Build ───────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Audio Data & Raw Datasets (Copyrighted / Heavy Binaries) ──────────────────
+# Audio formats
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.ogg
+*.webm
+*.part
+
+# Audio directories
+data/samples/
+data/external_demo/
+data/musiccaps_human_pilot/*.wav
+data/pilot_dataset/ai/
+data/pilot_dataset/human/
+
+# Archives & Large Datasets
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+FakeMusicCaps*
+
+# ─── Heavy Deep Learning Checkpoints (>40 MB each) ───────────────────────────
+# Exclude heavy PyTorch checkpoints; reproducible via scripts / release downloads
+*.pt
+*.pth
+*.ckpt
+*.bin
+experiments/resnet18_generalization/checkpoints/
+
+# Keep lightweight Classical ML model artifact (364 KB, essential for inference)
+!data/pilot_dataset/best_rf_model.joblib
+
+# ─── Temporary Files, Logs & OS Metadata ─────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+experiments/demo/external_tests_output.txt
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDE & Editors ───────────────────────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
