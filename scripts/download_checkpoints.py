@@ -25,12 +25,24 @@ CHECKPOINTS = [
 ]
 
 
-def download_progress(count, block_size, total_size):
-    percent = int(count * block_size * 100 / total_size) if total_size > 0 else 0
-    downloaded_mb = (count * block_size) / (1024 * 1024)
-    total_mb = total_size / (1024 * 1024) if total_size > 0 else 0
-    sys.stdout.write(f"\r  Progress: {percent:3d}% ({downloaded_mb:.1f} / {total_mb:.1f} MB)")
-    sys.stdout.flush()
+def download_file(url: str, dest_path: Path):
+    req = urllib.request.Request(url, headers={"User-Agent": "HarmonyShield-Setup"})
+    with urllib.request.urlopen(req) as resp, open(dest_path, "wb") as out_file:
+        total_size = int(resp.headers.get("content-length", 0))
+        downloaded = 0
+        chunk_size = 1024 * 1024 # 1 MB
+        last_pct = -1
+
+        while True:
+            chunk = resp.read(chunk_size)
+            if not chunk:
+                break
+            out_file.write(chunk)
+            downloaded += len(chunk)
+            pct = int(downloaded * 100 / total_size) if total_size else 0
+            if pct != last_pct and pct % 20 == 0:
+                print(f"  Downloaded: {pct}% ({downloaded / (1024 * 1024):.1f} / {total_size / (1024 * 1024):.1f} MB)")
+                last_pct = pct
 
 
 def download_checkpoints():
@@ -51,8 +63,8 @@ def download_checkpoints():
         url = f"{BASE_URL}/{ckpt}"
         print(f"• Downloading {ckpt}...")
         try:
-            urllib.request.urlretrieve(url, target_path, reporthook=download_progress)
-            print("\n  Download complete.")
+            download_file(url, target_path)
+            print("  [DONE] Download complete.")
         except Exception as e:
             print(f"\n[-] Failed to download {ckpt} from {url}: {e}")
             print("    Please ensure the release assets are published or copy the files manually.")
