@@ -2,13 +2,13 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, RadarC
 
 const GENERATORS = ['audioldm2', 'stable_audio_open', 'musicldm', 'mustango', 'MusicGen_medium']
 
-// Actual frozen LOGO results (verbatim from experiments)
+// Actual frozen LOGO results (verbatim from experiments/generator_generalization_results.csv)
 const CLASSICAL_LOGO = [
-  { generator: 'AudioLDM2',         acc: 0.7000, f1: 0.6977, roc: 0.6275 },
-  { generator: 'Stable Audio Open', acc: 0.6500, f1: 0.6552, roc: 0.6075 },
-  { generator: 'MusicLDM',          acc: 0.7500, f1: 0.7843, roc: 0.8475 },
-  { generator: 'Mustango',          acc: 0.7500, f1: 0.7018, roc: 0.6650 },
-  { generator: 'MusicGen Medium',   acc: 0.7750, f1: 0.7843, roc: 0.8250 },
+  { generator: 'AudioLDM2',         acc: 0.6000, f1: 0.6667, roc: 0.6225 },
+  { generator: 'Stable Audio Open', acc: 0.6000, f1: 0.6667, roc: 0.6812 },
+  { generator: 'MusicLDM',          acc: 0.6500, f1: 0.7407, roc: 0.7550 },
+  { generator: 'Mustango',          acc: 0.6250, f1: 0.7170, roc: 0.7212 },
+  { generator: 'MusicGen Medium',   acc: 0.6750, f1: 0.7547, roc: 0.7963 },
 ]
 
 const RESNET_LOGO = [
@@ -157,6 +157,54 @@ export default function ResearchPage() {
         </div>
       </div>
 
+      {/* Model Clarification: Pilot 01 Benchmark vs Deployed Model */}
+      <div className="glass" style={{ borderRadius: 12, padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <SectionHead
+          badge="Model Clarification"
+          title="Pilot Benchmark vs. Deployed Model"
+          sub="Clarifying the distinct roles of the exploratory in-domain benchmark and the deployed production model."
+        />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          <div style={{
+            padding: '1rem', borderRadius: 8,
+            background: 'rgba(56,189,248,0.03)',
+            border: '1px solid rgba(56,189,248,0.15)',
+          }}>
+            <p style={{ margin: '0 0 4px', fontSize: '0.65rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase' }}>
+              Pilot 01 — Best Experimental Model
+            </p>
+            <p style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>
+              Logistic Regression (Spectral Set B)
+            </p>
+            <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
+              Achieved <strong>F1 0.9756</strong>, <strong>Accuracy 97.5%</strong>, and <strong>ROC-AUC 0.9975</strong>.
+            </p>
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', lineHeight: 1.5 }}>
+              This was an <em>in-domain benchmark</em> evaluating AudioLDM2 vs matched MusicCaps human clips. It demonstrated linear separability on a single known generator, not universal detection capability across unseen generators.
+            </p>
+          </div>
+
+          <div style={{
+            padding: '1rem', borderRadius: 8,
+            background: 'rgba(129,140,248,0.03)',
+            border: '1px solid rgba(129,140,248,0.15)',
+          }}>
+            <p style={{ margin: '0 0 4px', fontSize: '0.65rem', fontWeight: 700, color: '#818cf8', textTransform: 'uppercase' }}>
+              Currently Deployed Classical Model
+            </p>
+            <p style={{ margin: '0 0 6px', fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0' }}>
+              Random Forest (Feature Set B, 22 Features)
+            </p>
+            <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5 }}>
+              100 estimators, standardized via <code>StandardScaler</code>.
+            </p>
+            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', lineHeight: 1.5 }}>
+              Selected for the live application because tree-based <code>feature_importances_</code> enable transparent forensic inspection on the dashboard. Feature importances indicate statistical association, not causal ground truth.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* External demo note */}
       <div style={{
         borderRadius: 10, padding: '1rem 1.25rem',
@@ -165,13 +213,15 @@ export default function ResearchPage() {
         marginBottom: '1.5rem',
       }}>
         <p style={{ margin: '0 0 6px', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', color: '#38bdf8', textTransform: 'uppercase' }}>
-          Black-Box External Demo Protocol
+          Black-Box External Demo Protocol & Audio Coverage
         </p>
-        <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b', lineHeight: 1.7 }}>
-          Two completely external tracks (one Suno AI-generated, one genuinely human-composed) were run through the frozen
-          pipeline <em>after</em> all model selection was complete. Neither track was used for training, validation,
-          threshold setting, or model selection. Both triggered INCONCLUSIVE verdicts — illustrating that the ensemble 
-          honestly surfaces uncertainty for out-of-distribution audio rather than confidently fabricating a verdict.
+        <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.7 }}>
+          Two completely external tracks (one Suno AI-generated, one genuinely human-composed) were evaluated through the frozen
+          pipeline after all model development was locked. Neither track was used for training, validation,
+          threshold setting, or model selection.
+        </p>
+        <p style={{ margin: 0, fontSize: '0.74rem', color: '#94a3b8', lineHeight: 1.6 }}>
+          <strong>Audio Coverage Windows:</strong> Classical Random Forest and ResNet18 inspect the <em>first 10 seconds</em> of audio at 16 kHz, while the AST baseline inspects the <em>entire track in 60-second sliding windows</em>. Under majority voting, external out-of-distribution tracks reveal expected architectural disagreement (2-to-1 votes), emphasizing that majority voting is an empirical decision rule rather than definitive proof of authenticity.
         </p>
       </div>
 

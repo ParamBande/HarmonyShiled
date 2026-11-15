@@ -30,6 +30,7 @@ from src.features.extractor import FeatureExtractor
 from src.features.melspectrogram import MelSpectrogramExtractor
 from src.models.resnet18_model import AudioResNet18
 from src.pretrained import ASTDetector
+from src.evaluation.consensus import compute_majority_consensus, is_valid_prob
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("harmonyshield")
@@ -143,10 +144,18 @@ class ResNetResult(ModelResult):
     checkpoint_results: list  # [{"name": ..., "ai_probability": ...}]
 
 class ConsensusResult(BaseModel):
-    status: str   # "STRONG_CONSENSUS_AI" | "STRONG_CONSENSUS_HUMAN" | "MIXED" | "INCONCLUSIVE"
+    status: str              # "AI_GENERATED" | "LIKELY_AI_GENERATED" | "LIKELY_HUMAN_CREATED" | "HUMAN_CREATED" | "UNABLE_TO_DETERMINE"
+    label: str               # "AI-Generated" | "Likely AI-Generated" | "Likely Human-Created" | "Human-Created" | "Unable to Determine"
+    sub: str                 # "UNANIMOUS VOTE" | "MAJORITY VOTE (2-TO-1)" | "INSUFFICIENT MODEL EVIDENCE"
     message: str
+    vote_summary: str        # e.g. "2 of 3 models indicate AI-generated."
     num_ai_votes: int
     num_human_votes: int
+    total_valid_votes: int
+    mean_ai_probability: Optional[float] = None
+    variance: Optional[float] = None
+    threshold_used: float = 0.5
+    disagreement: bool = False
 
 class FeatureImportance(BaseModel):
     name: str
@@ -181,65 +190,14 @@ def _family(name: str) -> str:
     return "Other"
 
 
-def _consensus(c_prob, r_prob, ast_prob,
-               c_pred, r_pred, ast_pred) -> ConsensusResult:
-    valid = [(p, pred) for p, pred in
-             [(c_prob, c_pred), (r_prob, r_pred), (ast_prob, ast_pred)]
-             if p is not None]
-    if not valid:
-        return ConsensusResult(
-            status="ERROR",
-            message="No method produced a valid result.",
-            num_ai_votes=0, num_human_votes=0
-        )
-
-    probs = [p for p, _ in valid]
-    preds = [pred for _, pred in valid]
-    variance = float(np.var(probs))
-    mean_prob = float(np.mean(probs))
-    num_ai = preds.count("AI")
-    num_human = preds.count("Human")
-
-    if variance > 0.05 or (0.3 < mean_prob < 0.7):
-        return ConsensusResult(
-            status="INCONCLUSIVE",
-            message=(
-                "The detection methods disagree substantially on this audio. "
-                "Treat the result cautiously rather than as a definitive classification."
-            ),
-            num_ai_votes=num_ai, num_human_votes=num_human
-        )
-    if num_ai == len(valid):
-        return ConsensusResult(
-            status="STRONG_CONSENSUS_AI",
-            message=(
-                f"All {len(valid)} methods indicate AI-generated patterns. "
-                "Agreement between methods increases consistency of the observed evidence, "
-                "but does not establish ground truth."
-            ),
-            num_ai_votes=num_ai, num_human_votes=num_human
-        )
-    if num_human == len(valid):
-        return ConsensusResult(
-            status="STRONG_CONSENSUS_HUMAN",
-            message=(
-                f"All {len(valid)} methods indicate human-composed patterns. "
-                "Agreement between methods increases consistency of the observed evidence, "
-                "but does not establish ground truth."
-            ),
-            num_ai_votes=num_ai, num_human_votes=num_human
-        )
-    majority = "AI" if num_ai > num_human else "Human"
-    return ConsensusResult(
-        status="MIXED",
-        message=(
-            f"Methods disagree. Majority ({max(num_ai,num_human)}/{len(valid)}) "
-            f"suggests {majority}-generated. "
-            "Note: Agreement does not guarantee correctness, especially for generators "
-            "not represented during training."
-        ),
-        num_ai_votes=num_ai, num_human_votes=num_human
+def _consensus(c_prob, r_prob, ast_prob) -> ConsensusResult:
+    res = compute_majority_consensus(
+        classical_prob=c_prob,
+        resnet_prob=r_prob,
+        ast_prob=ast_prob,
+        threshold=0.5,
     )
+    return ConsensusResult(**res)
 
 
 def _run_classical(audio_path: str):
@@ -256,7 +214,7 @@ def _run_classical(audio_path: str):
         feats, feat_names = extractor.extract_features(seg, feature_set="B")
         X = feats.reshape(1, -1)
         prob = float(rf.predict_proba(X)[0][1])
-        pred = "AI" if prob > 0.5 else "Human"
+        pred = "AI" if prob >= 0.5 else "Human"
         return prob, pred, meta, None
     except Exception as e:
         logger.exception("Classical inference error")
@@ -287,7 +245,7 @@ def _run_resnet(audio_path: str):
                 probs.append(prob)
 
         avg_prob = float(np.mean(probs)) if probs else 0.5
-        pred = "AI" if avg_prob > 0.5 else "Human"
+        pred = "AI" if avg_prob >= 0.5 else "Human"
         return avg_prob, pred, results, None
     except Exception as e:
         logger.exception("ResNet inference error")
@@ -299,7 +257,7 @@ def _run_ast(audio_path: str):
         result   = _models["ast"].predict(audio_path)
         ai_prob  = float(result["ai_probability"])
         hum_prob = float(result["human_probability"])
-        pred = "AI" if ai_prob > 0.5 else "Human"
+        pred = "AI" if ai_prob >= 0.5 else "Human"
         return ai_prob, hum_prob, pred, None
     except Exception as e:
         logger.exception("AST inference error")
@@ -391,13 +349,8 @@ async def analyze(file: UploadFile = File(...)):
         # ── Feature importances ───────────────────────────────────────────────
         top_features = _get_feature_importances(10)
 
-        # ── Consensus ─────────────────────────────────────────────────────────
-        consensus = _consensus(
-            c_prob, r_prob, a_prob,
-            c_pred if c_prob is not None else "Error",
-            r_pred if r_prob is not None else "Error",
-            a_pred if a_prob is not None else "Error",
-        )
+        # ── Consensus (Majority Voting) ───────────────────────────────────────
+        consensus = _consensus(c_prob, r_prob, a_prob)
 
         return AnalysisResponse(
             file=FileInfo(

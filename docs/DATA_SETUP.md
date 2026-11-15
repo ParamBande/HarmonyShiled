@@ -63,11 +63,11 @@ To allow complete scientific reproduction without downloading hundreds of megaby
 |---|---|---|
 | `dataset.csv` | Full metadata manifest of the 600-clip pilot dataset | 600 rows |
 | `features_A.csv` | MFCC features (20 coefficients $\times$ mean/std) | 40 features |
-| `features_B.csv` | Spectral features for Pilot 01 (AudioLDM2 vs Human) | 14 features |
-| `features_B_all.csv` | Spectral features across all 5 generators | 600 rows $\times$ 14 features |
-| `features_C.csv` | MFCC + Spectral features | 54 features |
-| `features_D.csv` | MFCC + Spectral + Harmonic features | 80 features |
-| `features_E.csv` | Full engineered feature set (Spectral, MFCC, Harmonic, Energy, Temporal) | 85 features |
+| `features_B.csv` | Spectral features for Pilot 01 (AudioLDM2 vs Human) | 22 features |
+| `features_B_all.csv` | Spectral features across all 5 generators | 600 rows $\times$ 22 features |
+| `features_C.csv` | MFCC + Spectral features | 62 features |
+| `features_D.csv` | MFCC + Spectral + Harmonic features | 88 features |
+| `features_E.csv` | Full engineered feature set (Spectral, MFCC, Harmonic, Energy, Temporal) | 96 features |
 
 Researchers can train and evaluate classical models directly on these CSVs using `src/models/trainer.py` or `scripts/train_resnet.py`.
 

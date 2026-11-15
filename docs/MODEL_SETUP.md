@@ -29,7 +29,7 @@ HarmonyShield implements a tripartite forensic evaluation framework:
 ## 2. Method 1: Classical ML (Feature Set B + Random Forest)
 
 - **Input:** 10-second audio segment at 16 kHz mono.
-- **Features Extracted:** Feature Set B (14 spectral features):
+- **Features Extracted:** Feature Set B (22 spectral features):
   - Spectral Centroid (mean, std)
   - Spectral Bandwidth (mean, std)
   - Spectral Rolloff (mean, std)

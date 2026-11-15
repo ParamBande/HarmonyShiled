@@ -1,13 +1,13 @@
 export default function HowItWorksPage() {
   const steps = [
     { n: '01', label: 'Audio Upload',          desc: 'Any audio file (MP3, WAV, FLAC, M4A) is uploaded to the server and stored in a temporary file for processing.' },
-    { n: '02', label: '10-Second Segmentation', desc: 'The audio is loaded at 16 kHz mono and segmented into 10-second windows. Short tracks are zero-padded.' },
-    { n: '03', label: 'Feature Extraction',     desc: 'Spectral features (centroid, bandwidth, rolloff, flatness, contrast, chroma) plus harmonic/temporal features are extracted from the first segment using librosa.' },
-    { n: '04', label: 'Classical ML',           desc: 'A frozen Random Forest (Feature Set B, spectral only) trained on 400 pilot clips predicts AI/Human probability from the extracted feature vector.' },
-    { n: '05', label: 'Mel-Spectrogram',        desc: 'A 128-band Mel-spectrogram (1024 FFT, 512 hop) is computed and converted to dB scale, then normalized to [0,1] for CNN input.' },
+    { n: '02', label: '10-Second Segmentation', desc: 'The audio is loaded at 16 kHz mono and segmented into 10-second windows. Classical ML and ResNet18 evaluate the first 10-second window. Short tracks are zero-padded.' },
+    { n: '03', label: 'Feature Extraction',     desc: '22 spectral features (centroid, bandwidth, rolloff, flatness, and 7-band contrast) are extracted from the first segment using librosa (Feature Set B).' },
+    { n: '04', label: 'Classical ML',           desc: 'A frozen Random Forest (Feature Set B, 22 spectral features, 100 trees) predicts AI/Human probability from the extracted feature vector.' },
+    { n: '05', label: 'Mel-Spectrogram',        desc: 'A 128-band Mel-spectrogram (1024 FFT, 512 hop) is computed for the first segment, converted to dB scale, and normalized to [0,1] for CNN input.' },
     { n: '06', label: 'ResNet18 Ensemble',      desc: '5 frozen ResNet18 checkpoints — each held out one AI generator during training — each independently predict AI probability. Their outputs are averaged.' },
-    { n: '07', label: 'AST Baseline',           desc: 'An independent pretrained Audio Spectrogram Transformer (AI-Music-Detection/ai_music_detection_large_60s) processes the full audio as an external reference.' },
-    { n: '08', label: 'Uncertainty Analysis',   desc: 'Variance and mean probability across all three methods are computed. High inter-model variance or mid-range mean probability triggers an INCONCLUSIVE verdict.' },
+    { n: '07', label: 'AST Baseline',           desc: 'An independent pretrained Audio Spectrogram Transformer (AI-Music-Detection/ai_music_detection_large_60s) processes the entire audio in 60-second sliding windows as an external reference.' },
+    { n: '08', label: 'Majority Voting & Telemetry', desc: 'Final classification is determined by strict majority voting across functioning models, while inter-model variance and mean probability are preserved as diagnostic telemetry.' },
   ]
 
   const methods = [
@@ -85,8 +85,8 @@ export default function HowItWorksPage() {
           ))}
         </div>
         <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
-          "Rather than assuming that one detector is always correct, HarmonyShield exposes disagreement between methods. 
-          When methods disagree materially, the system reports INCONCLUSIVE instead of forcing a binary verdict."
+          "HarmonyShield operates on a majority-voting policy while transparently reporting model disagreement. 
+          Unanimous votes result in definitive classifications ('AI-Generated' / 'Human-Created'), split 2-to-1 votes yield qualified assessments ('Likely AI-Generated' / 'Likely Human-Created'), and fewer than two valid models result in 'Unable to Determine'."
         </p>
       </div>
 
@@ -103,7 +103,7 @@ export default function HowItWorksPage() {
           <li>All models were trained on a 600-clip pilot dataset — far smaller than production-grade datasets.</li>
           <li>Generalization to generators not seen during training is limited and explicitly quantified.</li>
           <li>A correct prediction on any single song does not prove the system will generalize.</li>
-          <li>INCONCLUSIVE is a valid and honest output — do not override it manually.</li>
+          <li>Majority voting is a practical decision policy, not definitive mathematical proof of authenticity.</li>
           <li>This is a research prototype, not a certified forensic tool.</li>
         </ul>
       </div>

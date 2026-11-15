@@ -15,6 +15,7 @@ from src.features.extractor import FeatureExtractor
 from src.features.melspectrogram import MelSpectrogramExtractor
 from src.models.resnet18_model import AudioResNet18
 from src.pretrained import ASTDetector
+from src.evaluation.consensus import compute_majority_consensus
 
 def run_classical(audio_path, preprocessor, extractor, model):
     try:
@@ -30,7 +31,7 @@ def run_classical(audio_path, preprocessor, extractor, model):
         X = feats.reshape(1, -1)
         
         prob = model.predict_proba(X)[0][1] # Probability of class 1 (AI)
-        pred = "AI" if prob > 0.5 else "Human"
+        pred = "AI" if prob >= 0.5 else "Human"
         
         return prob, pred
     except Exception as e:
@@ -53,7 +54,7 @@ def run_resnet_ensemble(audio_path, preprocessor, extractor, models, device):
                 probs[name] = prob
                 
         avg_prob = np.mean(list(probs.values()))
-        pred = "AI" if avg_prob > 0.5 else "Human"
+        pred = "AI" if avg_prob >= 0.5 else "Human"
         
         return avg_prob, probs, pred
     except Exception as e:
@@ -120,7 +121,7 @@ def main():
     try:
         ast_result = ast_detector.predict(args.audio)
         ast_prob = ast_result['ai_probability']
-        ast_pred = "AI" if ast_prob > 0.5 else "Human"
+        ast_pred = "AI" if ast_prob >= 0.5 else "Human"
     except Exception as e:
         ast_prob, ast_pred = None, str(e)
         
@@ -150,33 +151,29 @@ def main():
         
     print("-" * 50)
     
-    # 4. Consensus Logic
-    valid_probs = [p for p in [c_prob, r_avg_prob, ast_prob] if p is not None]
-    if len(valid_probs) == 3:
-        preds = [c_pred, r_pred, ast_pred]
-        
-        # Calculate variance
-        variance = np.var(valid_probs)
-        mean_prob = np.mean(valid_probs)
-        
-        num_ai = preds.count("AI")
-        num_human = preds.count("Human")
-        
-        print("Final Analysis:")
-        
-        if variance > 0.05 or (mean_prob > 0.3 and mean_prob < 0.7):
-            print("=> CONCLUSION: INCONCLUSIVE / LOW CONFIDENCE")
-            print("   The models fundamentally disagree or are highly uncertain about this audio.")
-            print("   Do not trust this classification.")
-        else:
-            if num_ai == 3:
-                print("=> CONCLUSION: STRONG CONSENSUS -> AI-GENERATED")
-            elif num_human == 3:
-                print("=> CONCLUSION: STRONG CONSENSUS -> HUMAN-GENERATED")
-            else:
-                print("=> CONCLUSION: MIXED CONSENSUS")
-                print(f"   Majority vote: {'AI' if num_ai > num_human else 'Human'} ({max(num_ai, num_human)}/3 models)")
-                print("   Note: Agreement does not guarantee correctness, especially for external unknown generators.")
+    # 4. Consensus Decision (Majority Voting)
+    consensus = compute_majority_consensus(
+        classical_prob=c_prob,
+        resnet_prob=r_avg_prob,
+        ast_prob=ast_prob,
+        threshold=0.5,
+    )
+
+    print("Final Forensic Consensus (Majority Voting Policy):")
+    print(f"=> CONCLUSION: {consensus['label'].upper()}")
+    print(f"   Status Code: {consensus['status']}")
+    print(f"   Verdict: {consensus['label']} ({consensus['sub']})")
+    print(f"   Vote Summary: {consensus['vote_summary']}")
+    print(f"   Votes: {consensus['num_ai_votes']} AI / {consensus['num_human_votes']} Human (out of {consensus['total_valid_votes']} valid models)")
+    if consensus['mean_ai_probability'] is not None:
+        print(f"   Diagnostic Telemetry:")
+        print(f"     - Mean AI Probability: {consensus['mean_ai_probability']:.4f}")
+        print(f"     - Inter-Model Variance: {consensus['variance']:.4f}")
+        print(f"     - Decision Threshold: {consensus['threshold_used']}")
+        print(f"     - Model Disagreement: {'Yes' if consensus['disagreement'] else 'No'}")
+    print(f"   Assessment: {consensus['message']}")
+    print("   Notice: Majority voting is a model-based assessment, not definitive proof of authenticity.")
+    print("           The underlying models are not statistically independent.")
                 
     print(f"\nTotal Inference Time: {end_time - start_time:.2f} sec")
 

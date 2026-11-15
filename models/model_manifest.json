@@ -1,0 +1,69 @@
+{
+  "project": "HarmonyShield",
+  "version": "1.0.0",
+  "artifacts": [
+    {
+      "name": "Classical Random Forest (Set B, 22 Spectral Features)",
+      "filename": "best_rf_model.joblib",
+      "path": "data/pilot_dataset/best_rf_model.joblib",
+      "size_bytes": 364466,
+      "sha256": "36a6dc3f1f6e0a9c64c0ee66504e5832a78e47e84515171abbe25c1dd9cc0b7f",
+      "essential_for": "Classical Random Forest inference & feature importance",
+      "distribution": "Tracked directly in Git repository"
+    },
+    {
+      "name": "ResNet18 LOGO Checkpoint (AudioLDM2)",
+      "filename": "LOGO_audioldm2_model.pt",
+      "path": "experiments/resnet18_generalization/checkpoints/LOGO_audioldm2_model.pt",
+      "size_bytes": 44789924,
+      "sha256": "6d6c2dbb1032ae3c4f7a6b75ab86b3849e03f0f1c821b6bccad7763d195c251e",
+      "essential_for": "ResNet18 deep-learning ensemble inference",
+      "distribution": "GitHub Release asset / Shared Team Storage"
+    },
+    {
+      "name": "ResNet18 LOGO Checkpoint (MusicGen Medium)",
+      "filename": "LOGO_MusicGen_medium_model.pt",
+      "path": "experiments/resnet18_generalization/checkpoints/LOGO_MusicGen_medium_model.pt",
+      "size_bytes": 44790744,
+      "sha256": "fba9c0ca92ba1801e8dd8addd59d13b54ccd3c9177d344262da3c34ae3c885a1",
+      "essential_for": "ResNet18 deep-learning ensemble inference",
+      "distribution": "GitHub Release asset / Shared Team Storage"
+    },
+    {
+      "name": "ResNet18 LOGO Checkpoint (MusicLDM)",
+      "filename": "LOGO_musicldm_model.pt",
+      "path": "experiments/resnet18_generalization/checkpoints/LOGO_musicldm_model.pt",
+      "size_bytes": 44789798,
+      "sha256": "27d3cd74adf6c74ef761f599505a4a88dc20d3b4841a0ee0643c07957e5840ee",
+      "essential_for": "ResNet18 deep-learning ensemble inference",
+      "distribution": "GitHub Release asset / Shared Team Storage"
+    },
+    {
+      "name": "ResNet18 LOGO Checkpoint (Mustango)",
+      "filename": "LOGO_mustango_model.pt",
+      "path": "experiments/resnet18_generalization/checkpoints/LOGO_mustango_model.pt",
+      "size_bytes": 44789798,
+      "sha256": "6c21078d84e012e90e247d1242d32bf327714a7bf8c7c0e393bd02306785d8fa",
+      "essential_for": "ResNet18 deep-learning ensemble inference",
+      "distribution": "GitHub Release asset / Shared Team Storage"
+    },
+    {
+      "name": "ResNet18 LOGO Checkpoint (Stable Audio Open)",
+      "filename": "LOGO_stable_audio_open_model.pt",
+      "path": "experiments/resnet18_generalization/checkpoints/LOGO_stable_audio_open_model.pt",
+      "size_bytes": 44790996,
+      "sha256": "d7fa7833d91503247c65914d093788d19af2d3fa1753bfcf81595139503f016b",
+      "essential_for": "ResNet18 deep-learning ensemble inference",
+      "distribution": "GitHub Release asset / Shared Team Storage"
+    }
+  ],
+  "pretrained_models": [
+    {
+      "name": "Audio Spectrogram Transformer (AST 60s)",
+      "model_id": "AI-Music-Detection/ai_music_detection_large_60s",
+      "provider": "Hugging Face Hub",
+      "size_approx": "~340 MB",
+      "retrieval": "Automatic via AutoModelForAudioClassification on first run; cached in ~/.cache/huggingface"
+    }
+  ]
+}

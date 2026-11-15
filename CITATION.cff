@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software or benchmark methodology in your research, please cite it as below."
+title: "HarmonyShield: Machine Learning-Based Audio Forensics for Detection of AI-Generated Music"
+version: 1.0.0
+date-released: 2026-10-01
+url: "https://github.com/ParamBande/HarmonyShiled"
+authors:
+  - family-names: "Bande"
+    given-names: "Param"
+keywords:
+  - audio forensics
+  - ai generated music
+  - synthetic audio detection
+  - resnet18
+  - audio spectrogram transformer
+  - machine learning
